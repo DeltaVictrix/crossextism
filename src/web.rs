@@ -5,9 +5,9 @@ use js_sys::Promise;
 use js_sys::Reflect;
 
 #[wasm_bindgen(module = "https://esm.sh/@extism/extism@2.0.0-rc13/es2022/extism.bundle.mjs")]
-extern "C" {
+unsafe extern "C" {
 	#[wasm_bindgen(js_name = "createPlugin")]
-	pub fn create_plugin(manifest: JsValue, config: JsValue) -> Promise;
+	pub unsafe fn create_plugin(manifest: JsValue, config: JsValue) -> Promise;
 } // end extern "C"
 
 pub struct Plugin { plugin: JsValue, call_fn: js_sys::Function }
@@ -16,7 +16,7 @@ impl Plugin {
 	pub async fn load_url(url: &str) -> Result<Self, CrossExtismError> {
 		let manifest = js_sys::JsString::from(url);
 		let config = JsValue::UNDEFINED;
-		let promise = create_plugin(manifest.into(), config);
+		let promise = unsafe { create_plugin(manifest.into(), config) };
 		let value = JsFuture::from(promise).await?;
 		let call_fn = Reflect::get(&value, &JsValue::from_str("call"))?.dyn_into::<js_sys::Function>()?;
 		return Ok(Self { plugin: value, call_fn });
@@ -24,7 +24,7 @@ impl Plugin {
 	pub async fn load_bytes(bytes: &[u8]) -> Result<Self, CrossExtismError> {
 		let manifest: JsValue = js_sys::Uint8Array::from(bytes).into();
 		let config = JsValue::UNDEFINED;
-		let promise = create_plugin(manifest.into(), config);
+		let promise = unsafe { create_plugin(manifest.into(), config) };
 		let value = JsFuture::from(promise).await?;
 		let call_fn = Reflect::get(&value, &JsValue::from_str("call"))?.dyn_into::<js_sys::Function>()?;
 		return Ok(Self { plugin: value, call_fn });

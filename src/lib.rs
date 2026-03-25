@@ -12,8 +12,6 @@ pub use native::*;
 pub enum CrossExtismError {
 	#[cfg(not(target_arch = "wasm32"))]
 	ExtismError(extism::Error),
-	#[cfg(not(target_arch = "wasm32"))]
-	CrossFetchError(crossfetch::CrossFetchError),
 	#[cfg(target_arch = "wasm32")]
 	JSError(wasm_bindgen::JsValue),
 } // end enum Error
@@ -24,13 +22,6 @@ impl From<extism::Error> for CrossExtismError {
 		return Self::ExtismError(error);
 	} // end fn from
 } // end impl From<extism::Error> for CrossExtismError
-
-#[cfg(not(target_arch = "wasm32"))]
-impl From<crossfetch::CrossFetchError> for CrossExtismError {
-	fn from(error: crossfetch::CrossFetchError) -> Self {
-		return Self::CrossFetchError(error);
-	} // end fn from
-} // end impl From<crossfetch::CrossFetchError> for CrossExtismError
 
 #[cfg(target_arch = "wasm32")]
 impl From<wasm_bindgen::JsValue> for CrossExtismError {
@@ -45,8 +36,8 @@ mod tests {
 	use super::*;
 	#[tokio::test]
 	async fn test_plugin() {
-		let mut plugin = Plugin::load_url("https://cdn.modsurfer.dylibso.com/api/v1/module/be716369b7332148771e3cd6376d688dfe7ee7dd503cbc43d2550d76cb45a01d.wasm").await.unwrap();
-		let result = plugin.call("count_vowels", b"Hello, World!").await.unwrap();
+		let mut plugin = Plugin::load_url("https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm").await.unwrap();
+		let result = plugin.call("count_vowels", "Hello, World!").await.unwrap();
 		let result_str = String::from_utf8(result).unwrap();
 		assert_eq!(result_str, r#"{"count":3,"total":3,"vowels":"aeiouAEIOU"}"#);
 	} // end fn test_plugin
@@ -56,6 +47,7 @@ mod tests {
 #[cfg(test)]
 mod tests {
 	// Note: These tests are meant to be run in a browser environment using `wasm-pack test --headless --firefox`
+	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 	use super::*;
 	use wasm_bindgen_test::*;
 	#[wasm_bindgen_test]
@@ -65,5 +57,4 @@ mod tests {
 		let result_str = String::from_utf8(result).unwrap();
 		assert_eq!(result_str, r#"{"count":3,"total":3,"vowels":"aeiouAEIOU"}"#);
 	} // end fn test_plugin
-	wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 } // end mod tests
